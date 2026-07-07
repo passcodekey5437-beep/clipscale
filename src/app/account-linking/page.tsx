@@ -2,21 +2,22 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { saveData, getData } from "@/lib/storage";
 
 
 export default function AccountLinking() {
 
 
-  const [platform, setPlatform] = useState("TikTok");
-  const [username, setUsername] = useState("");
-  const [discord, setDiscord] = useState("");
-  const [paypalEmail, setPaypalEmail] = useState("");
+  const [platform,setPlatform] = useState("TikTok");
+  const [username,setUsername] = useState("");
+  const [discord,setDiscord] = useState("");
+  const [paypalEmail,setPaypalEmail] = useState("");
 
-  const [creator, setCreator] = useState<any>(null);
+  const [creator,setCreator] = useState<any>(null);
 
-  const [submitted, setSubmitted] = useState(false);
+  const [submitted,setSubmitted] = useState(false);
 
-  const [loading, setLoading] = useState(false);
+  const [loading,setLoading] = useState(false);
 
 
 
@@ -26,33 +27,90 @@ export default function AccountLinking() {
     if(!discord) return;
 
 
-    const { data } = await supabase
+    const {data,error}=await supabase
       .from("creators")
       .select("*")
-      .eq("discord_username", discord)
+      .eq("discord_username",discord)
       .single();
+
+
+
+    if(error){
+
+      console.log(error);
+
+      return;
+
+    }
 
 
 
     if(data){
 
-  setCreator(data);
 
-  localStorage.setItem(
-    "linkedAccount",
-    JSON.stringify({
-      platform: data.platform,
-      username: data.username,
-      discord: data.discord_username,
-      status: data.verification_code ? "Verified" : "Pending",
-      verificationCode: data.verification_code
-    })
-  );
+      const account = {
 
-}
+        platform:data.platform,
+
+        username:data.username,
+
+        discord:data.discord_username,
+
+        status:data.verification_code 
+          ? "Verified"
+          : "Pending",
+
+        verificationCode:data.verification_code
+
+      };
+
+
+      setCreator(data);
+
+
+      saveData(
+        "linkedAccount",
+        account
+      );
+
+
+    }
 
 
   }
+
+
+
+
+
+  useEffect(()=>{
+
+
+    const saved = getData("linkedAccount");
+
+
+    if(saved){
+
+
+      setDiscord(saved.discord);
+
+      setUsername(saved.username);
+
+      setPlatform(saved.platform);
+
+
+      setTimeout(()=>{
+
+        checkAccount();
+
+      },500);
+
+
+    }
+
+
+  },[]);
+
 
 
 
@@ -67,7 +125,7 @@ export default function AccountLinking() {
       !paypalEmail
     ){
 
-      alert("Please complete all fields before submitting.");
+      alert("Please complete all fields.");
 
       return;
 
@@ -79,19 +137,19 @@ export default function AccountLinking() {
 
 
 
-    const { error } = await supabase
+    const {error}=await supabase
       .from("creators")
       .insert({
 
-        discord_username: discord,
+        discord_username:discord,
 
         platform,
 
         username,
 
-        paypal_email: paypalEmail,
+        paypal_email:paypalEmail,
 
-        status: "Pending"
+        status:"Pending"
 
       });
 
@@ -99,9 +157,7 @@ export default function AccountLinking() {
 
     if(error){
 
-      console.log(error);
-
-      alert("Something went wrong. Please try again.");
+      alert(error.message);
 
       setLoading(false);
 
@@ -120,22 +176,6 @@ export default function AccountLinking() {
 
 
   }
-
-
-
-
-
-  useEffect(()=>{
-
-
-    if(discord){
-
-      checkAccount();
-
-    }
-
-
-  },[discord]);
 
 
 
@@ -163,196 +203,160 @@ export default function AccountLinking() {
 
 
 
-        <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6">
+        <div className="mt-8 bg-white/5 border border-white/10 rounded-2xl p-6">
 
 
 
-          <label className="block text-gray-300">
-            Social Platform
-          </label>
+<label>
+Social Platform
+</label>
 
+<select
+value={platform}
+onChange={(e)=>setPlatform(e.target.value)}
+className="mt-2 w-full bg-black border border-white/10 p-3 rounded-xl"
+>
 
-          <select
+<option>TikTok</option>
+<option>Instagram</option>
+<option>YouTube</option>
 
-            value={platform}
+</select>
 
-            onChange={(e)=>setPlatform(e.target.value)}
 
-            className="mt-2 w-full rounded-xl bg-black border border-white/10 p-3"
 
-          >
 
-            <option>TikTok</option>
-            <option>Instagram</option>
-            <option>YouTube</option>
+<label className="block mt-6">
+Username
+</label>
 
-          </select>
+<input
+value={username}
+onChange={(e)=>setUsername(e.target.value)}
+className="mt-2 w-full bg-black border border-white/10 p-3 rounded-xl"
+/>
 
 
 
 
+<label className="block mt-6">
+Discord Username
+</label>
 
-          <label className="mt-6 block text-gray-300">
-            Social Media Username
-          </label>
+<input
+value={discord}
+onChange={(e)=>setDiscord(e.target.value)}
+className="mt-2 w-full bg-black border border-white/10 p-3 rounded-xl"
+/>
 
 
-          <input
 
-            required
 
-            value={username}
+<label className="block mt-6">
+PayPal Email
+</label>
 
-            onChange={(e)=>setUsername(e.target.value)}
+<input
+value={paypalEmail}
+onChange={(e)=>setPaypalEmail(e.target.value)}
+className="mt-2 w-full bg-black border border-white/10 p-3 rounded-xl"
+/>
 
-            placeholder="@username"
 
-            className="mt-2 w-full rounded-xl bg-black border border-white/10 p-3"
 
-          />
 
 
+<button
 
+onClick={submitAccount}
 
+disabled={loading}
 
-          <label className="mt-6 block text-gray-300">
-            Discord Username
-          </label>
+className="mt-8 w-full bg-white text-black rounded-xl py-3"
 
+>
 
-          <input
+{loading ? "Submitting..." : "Submit For Verification"}
 
-            required
+</button>
 
-            value={discord}
 
-            onChange={(e)=>setDiscord(e.target.value)}
 
-            placeholder="Discord username"
 
-            className="mt-2 w-full rounded-xl bg-black border border-white/10 p-3"
 
-          />
 
 
+{(submitted || creator) && (
 
+<div className="mt-8 bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
 
 
-          <label className="mt-6 block text-gray-300">
-            PayPal Email
-          </label>
 
+{creator?.verification_code ? (
 
-          <input
+<>
 
-            required
 
-            type="email"
+<p className="font-bold">
+🟢 Account Verified
+</p>
 
-            value={paypalEmail}
 
-            onChange={(e)=>setPaypalEmail(e.target.value)}
+<p className="mt-3">
+Your verification code:
+</p>
 
-            placeholder="PayPal email used for payments"
 
-            className="mt-2 w-full rounded-xl bg-black border border-white/10 p-3"
+<p className="text-3xl font-bold mt-2">
+{creator.verification_code}
+</p>
 
-          />
 
 
+<p className="mt-4 text-gray-300">
 
+Verification complete. Press back and revisit Account Linking once to unlock creator features.
 
+</p>
 
-          <button
 
-            onClick={submitAccount}
+</>
 
-            disabled={loading}
 
-            className="mt-8 w-full rounded-xl bg-white py-3 text-black"
+):(
 
-          >
 
-            {loading
-              ? "Submitting..."
-              : "Submit For Verification"}
+<>
 
-          </button>
+<p>
+🟡 Waiting for verification
+</p>
 
 
+<p className="mt-3 text-gray-300">
 
+Your verification code will appear here once assigned.
 
+</p>
 
+</>
 
 
-          {(submitted || creator) && (
+)}
 
-            <div className="mt-8 rounded-xl border border-yellow-500/20 bg-yellow-500/10 p-4">
 
 
-              {creator?.verification_code ? (
+</div>
 
-                <>
+)}
 
-                  <p className="font-semibold">
-                    🟢 Account Verified
-                  </p>
 
 
-                  <p className="mt-3 text-gray-300">
-                    Your verification code:
-                  </p>
+</div>
 
+</div>
 
-                  <p className="mt-2 text-2xl font-bold">
-                    {creator.verification_code}
-                  </p>
-
-                </>
-
-
-              ) : (
-
-                <>
-
-                  <p className="font-semibold">
-                    🟡 Waiting for verification
-                  </p>
-
-
-                  <p className="mt-3 text-sm text-gray-300">
-
-                    Your account is being reviewed. Usually takes 1 hour or less for a code back. May take longer in some cases. Come back here to check. MAKE SURE TO TYPE IN ALL YOUR INFORMATION AGAIN IN ORDER TO GAIN ACCESS.
-
-                  </p>
-
-
-                  <p className="mt-3 text-sm text-gray-300">
-
-                    Your verification code will appear here once assigned.
-
-                  </p>
-
-
-                </>
-
-              )}
-
-
-
-            </div>
-
-          )}
-
-
-
-        </div>
-
-
-      </div>
-
-
-    </main>
+</main>
 
   );
 
