@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getData } from "@/lib/storage";
+import { getData, saveData } from "@/lib/storage";
 import { supabase } from "@/lib/supabase";
 
 
@@ -14,16 +14,65 @@ export default function PortalPage() {
 
   useEffect(() => {
 
-    const savedAccount = getData("linkedAccount");
+    async function loadAccount(){
+
+      const savedAccount = getData("linkedAccount");
 
 
-    if(savedAccount){
+      if(!savedAccount){
+        return;
+      }
 
-      setAccount(savedAccount);
 
-      loadSubmissions(savedAccount.discord);
+      // Refresh verification status from database
+      const { data } = await supabase
+        .from("creators")
+        .select("*")
+        .eq("discord_username", savedAccount.discord)
+        .single();
+
+
+
+      if(data){
+
+        const updatedAccount = {
+
+          platform: data.platform,
+
+          username: data.username,
+
+          discord: data.discord_username,
+
+          status: data.verification_code 
+            ? "Verified" 
+            : "Pending",
+
+          verificationCode: data.verification_code
+
+        };
+
+
+        saveData(
+          "linkedAccount",
+          updatedAccount
+        );
+
+
+        setAccount(updatedAccount);
+
+
+        loadSubmissions(
+          updatedAccount.discord
+        );
+
+
+      }
+
 
     }
+
+
+    loadAccount();
 
 
   }, []);
@@ -170,6 +219,8 @@ export default function PortalPage() {
 
               {account.verificationCode && (
 
+                <>
+
                 <p className="mt-4 text-gray-300">
 
                   Verification Code:
@@ -181,6 +232,15 @@ export default function PortalPage() {
                   </span>
 
                 </p>
+
+
+                <p className="mt-4 text-sm text-gray-400">
+
+                  Verification complete. You can now submit clips and access creator features.
+
+                </p>
+
+                </>
 
               )}
 
@@ -246,7 +306,16 @@ export default function PortalPage() {
 
                     <strong>Clip:</strong>{" "}
 
-                    {submission.clip_url}
+                    <a
+                      href={submission.clip_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline"
+                    >
+
+                      {submission.clip_url}
+
+                    </a>
 
                   </p>
 
@@ -271,6 +340,30 @@ export default function PortalPage() {
                     <p className="mt-2 text-red-400">
 
                       Reason: {submission.rejection_reason}
+
+                    </p>
+
+                  )}
+
+
+
+                  {submission.status === "Approved" && (
+
+                    <p className="mt-2 text-green-400">
+
+                      ✅ Your clip has been approved!
+
+                    </p>
+
+                  )}
+
+
+
+                  {submission.status === "Pending" && (
+
+                    <p className="mt-2 text-yellow-400">
+
+                      🟡 Your clip is being reviewed.
 
                     </p>
 

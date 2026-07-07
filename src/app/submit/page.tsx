@@ -2,36 +2,110 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { getData } from "@/lib/storage";
 
 
-export default function SubmitClip(){
+export default function SubmitClip() {
 
 
-  const [account, setAccount] = useState<any>(null);
+  const [creator, setCreator] = useState<any>(null);
 
   const [discord, setDiscord] = useState("");
+
   const [campaign, setCampaign] = useState("");
+
   const [platform, setPlatform] = useState("TikTok");
+
   const [clipUrl, setClipUrl] = useState("");
 
   const [submitted, setSubmitted] = useState(false);
+
+  const [loading, setLoading] = useState(true);
+
+
+
+
+
+  async function loadCreator(){
+
+
+    const saved = localStorage.getItem("linkedAccount");
+
+
+    if(!saved){
+
+      setLoading(false);
+
+      return;
+
+    }
+
+
+
+    const account = JSON.parse(saved);
+
+
+
+    if(!account.discord){
+
+      setLoading(false);
+
+      return;
+
+    }
+
+
+
+    const { data, error } = await supabase
+
+      .from("creators")
+
+      .select("*")
+
+      .eq("discord_username", account.discord)
+
+      .single();
+
+
+
+
+
+    if(error){
+
+      console.log(error);
+
+      setLoading(false);
+
+      return;
+
+    }
+
+
+
+
+
+    setCreator(data);
+
+    setDiscord(data.discord_username);
+
+    setLoading(false);
+
+
+  }
+
+
+
+
 
 
 
   useEffect(()=>{
 
-    const savedAccount = getData("linkedAccount");
-
-    if(savedAccount){
-
-      setAccount(savedAccount);
-
-      setDiscord(savedAccount.discord || "");
-
-    }
+    loadCreator();
 
   },[]);
+
+
+
 
 
 
@@ -41,7 +115,7 @@ export default function SubmitClip(){
 
 
     if(
-      !discord ||
+      !creator ||
       !campaign ||
       !clipUrl
     ){
@@ -54,11 +128,14 @@ export default function SubmitClip(){
 
 
 
+
     const { error } = await supabase
+
       .from("submissions")
+
       .insert({
 
-        creator_discord: discord,
+        creator_discord: creator.discord_username,
 
         campaign,
 
@@ -66,9 +143,12 @@ export default function SubmitClip(){
 
         clip_url: clipUrl,
 
-        status: "Pending"
+        status:"Pending"
 
       });
+
+
+
 
 
 
@@ -94,7 +174,30 @@ export default function SubmitClip(){
 
 
 
-  if(!account){
+
+
+  if(loading){
+
+    return (
+
+      <main className="min-h-screen bg-black text-white p-10">
+
+        Loading...
+
+      </main>
+
+    );
+
+  }
+
+
+
+
+
+
+
+  if(!creator){
+
 
     return (
 
@@ -102,15 +205,24 @@ export default function SubmitClip(){
 
         <div className="max-w-xl mx-auto">
 
+
           <h1 className="text-4xl font-bold">
+
             Submit Clip
+
           </h1>
+
+
 
           <p className="mt-5 text-gray-400">
+
             Please link your account before submitting clips.
+
           </p>
 
+
         </div>
+
 
       </main>
 
@@ -122,7 +234,11 @@ export default function SubmitClip(){
 
 
 
-  if(account.status !== "Verified"){
+
+
+
+  if(!creator.verification_code){
+
 
     return (
 
@@ -130,21 +246,32 @@ export default function SubmitClip(){
 
         <div className="max-w-xl mx-auto">
 
+
           <h1 className="text-4xl font-bold">
+
             Submit Clip
+
           </h1>
 
+
+
           <p className="mt-5 text-yellow-400">
+
             🟡 Your account is waiting for verification.
+
           </p>
 
+
         </div>
+
 
       </main>
 
     );
 
   }
+
+
 
 
 
@@ -160,14 +287,23 @@ export default function SubmitClip(){
       <div className="max-w-xl mx-auto">
 
 
+
         <h1 className="text-4xl font-bold">
+
           Submit Clip
+
         </h1>
 
 
+
+
         <p className="mt-4 text-gray-400">
+
           Submit your completed short-form content.
+
         </p>
+
+
 
 
 
@@ -175,19 +311,20 @@ export default function SubmitClip(){
 
 
 
+
+
           <label>
+
             Discord Username
+
           </label>
+
 
           <input
 
-            required
-
             value={discord}
 
-            onChange={(e)=>setDiscord(e.target.value)}
-
-            placeholder="Discord username"
+            disabled
 
             className="mt-2 w-full rounded-xl bg-black border border-white/10 p-3"
 
@@ -197,14 +334,16 @@ export default function SubmitClip(){
 
 
 
+
+
           <label className="mt-5 block">
+
             Campaign
+
           </label>
 
 
           <input
-
-            required
 
             value={campaign}
 
@@ -220,9 +359,14 @@ export default function SubmitClip(){
 
 
 
+
+
           <label className="mt-5 block">
+
             Platform
+
           </label>
+
 
 
           <select
@@ -236,8 +380,11 @@ export default function SubmitClip(){
           >
 
             <option>TikTok</option>
+
             <option>Instagram</option>
+
             <option>YouTube</option>
+
 
           </select>
 
@@ -245,14 +392,18 @@ export default function SubmitClip(){
 
 
 
+
+
           <label className="mt-5 block">
+
             Clip URL
+
           </label>
+
 
 
           <input
 
-            required
 
             value={clipUrl}
 
@@ -263,6 +414,8 @@ export default function SubmitClip(){
             className="mt-2 w-full rounded-xl bg-black border border-white/10 p-3"
 
           />
+
+
 
 
 
@@ -284,6 +437,9 @@ export default function SubmitClip(){
 
 
 
+
+
+
           {submitted && (
 
             <div className="mt-6 rounded-xl bg-green-500/10 border border-green-500/20 p-4">
@@ -296,7 +452,9 @@ export default function SubmitClip(){
 
 
 
+
         </div>
+
 
 
       </div>
@@ -305,5 +463,6 @@ export default function SubmitClip(){
     </main>
 
   );
+
 
 }
