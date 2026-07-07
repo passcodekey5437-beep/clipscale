@@ -298,33 +298,24 @@ Your verification code:
 {creator.verification_code || "No code assigned yet"}
 </p>
 
-
 <button
+  onClick={() => {
+    saveData(
+      "linkedAccount",
+      {
+        platform: creator.platform,
+        username: creator.username,
+        discord: creator.discord_username,
+        status: "Verified",
+        verificationCode: creator.verification_code
+      }
+    );
 
-onClick={() => {
-
-saveData(
-"linkedAccount",
-{
-platform: creator.platform,
-username: creator.username,
-discord: creator.discord_username,
-status:"Verified",
-verificationCode: creator.verification_code
-}
-);
-
-
-window.location.href="/";
-
-}}
-
-className="mt-6 w-full rounded-xl bg-white py-3 text-black"
-
+    window.location.href = "/";
+  }}
+  className="mt-6 w-full rounded-xl bg-red-500 py-4 text-white font-bold"
 >
-
-Unlock My Submissions & Submit Clip
-
+  UNLOCK MY SUBMISSIONS & SUBMIT CLIP
 </button>
 
 
