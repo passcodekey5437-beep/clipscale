@@ -282,103 +282,55 @@ className="mt-8 w-full bg-white text-black rounded-xl py-3"
 
 
 
+{creator && (
 
-{(submitted || creator) && (
+<div className="mt-8 bg-green-500/10 border border-green-500/20 rounded-xl p-4">
 
-<div className="mt-8 bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
-
-
-
-{creator && creator.verification_code ? (
-
-<>
-
-
-<p className="font-bold">
+<p className="font-bold text-green-400">
 🟢 Account Verified
 </p>
 
-
 <p className="mt-3">
-Your verification code above MUST be placed in the BIO of your social media PAGE:
+Your verification code:
 </p>
-
 
 <p className="text-3xl font-bold mt-2">
-{creator.verification_code}
+{creator.verification_code || "No code assigned yet"}
 </p>
+
 
 <button
 
-  onClick={() => {
+onClick={() => {
 
-    localStorage.setItem(
-      "linkedAccount",
-      JSON.stringify({
-
-        platform: creator.platform,
-
-        username: creator.username,
-
-        discord: creator.discord_username,
-
-        status: "Verified",
-
-        verificationCode: creator.verification_code
-
-      })
-    );
+saveData(
+"linkedAccount",
+{
+platform: creator.platform,
+username: creator.username,
+discord: creator.discord_username,
+status:"Verified",
+verificationCode: creator.verification_code
+}
+);
 
 
-    window.location.href = "/";
+window.location.href="/";
 
-  }}
+}}
 
-  className="mt-6 w-full rounded-xl bg-white py-3 text-black"
+className="mt-6 w-full rounded-xl bg-white py-3 text-black"
 
 >
 
-  Unlock My Submissions & Submit Clip
+Unlock My Submissions & Submit Clip
 
 </button>
-
-<p className="mt-4 text-gray-300">
-
-Verification complete. Press back and revisit Account Linking once to unlock creator features.
-
-</p>
-
-
-</>
-
-
-):(
-
-
-<>
-
-<p>
-🟡 Waiting for verification
-</p>
-
-
-<p className="mt-3 text-gray-300">
-
-Your verification code will appear here once assigned.
-
-</p>
-
-</>
-
-
-)}
-
 
 
 </div>
 
 )}
-
 
 
 </div>
