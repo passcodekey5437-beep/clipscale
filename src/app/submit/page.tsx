@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { getData } from "@/lib/storage";
 
 
 export default function SubmitClip(){
 
+
+  const [account, setAccount] = useState<any>(null);
 
   const [discord, setDiscord] = useState("");
   const [campaign, setCampaign] = useState("");
@@ -13,6 +16,24 @@ export default function SubmitClip(){
   const [clipUrl, setClipUrl] = useState("");
 
   const [submitted, setSubmitted] = useState(false);
+
+
+
+  useEffect(()=>{
+
+    const savedAccount = getData("linkedAccount");
+
+    if(savedAccount){
+
+      setAccount(savedAccount);
+
+      setDiscord(savedAccount.discord || "");
+
+    }
+
+  },[]);
+
+
 
 
 
@@ -67,6 +88,65 @@ export default function SubmitClip(){
 
 
   }
+
+
+
+
+
+
+  if(!account){
+
+    return (
+
+      <main className="min-h-screen bg-black text-white p-10">
+
+        <div className="max-w-xl mx-auto">
+
+          <h1 className="text-4xl font-bold">
+            Submit Clip
+          </h1>
+
+          <p className="mt-5 text-gray-400">
+            Please link your account before submitting clips.
+          </p>
+
+        </div>
+
+      </main>
+
+    );
+
+  }
+
+
+
+
+
+  if(account.status !== "Verified"){
+
+    return (
+
+      <main className="min-h-screen bg-black text-white p-10">
+
+        <div className="max-w-xl mx-auto">
+
+          <h1 className="text-4xl font-bold">
+            Submit Clip
+          </h1>
+
+          <p className="mt-5 text-yellow-400">
+            🟡 Your account is waiting for verification.
+          </p>
+
+        </div>
+
+      </main>
+
+    );
+
+  }
+
+
 
 
 
