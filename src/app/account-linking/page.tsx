@@ -28,20 +28,28 @@ export default function AccountLinking() {
 
 
     const {data,error}=await supabase
-      .from("creators")
-      .select("*")
-      .eq("discord_username",discord)
-      .single();
+  .from("creators")
+  .select("*")
+  .eq("discord_username",discord)
+  .maybeSingle();
 
 
 
     if(error){
 
-      console.log(error);
+  console.log("CHECK ACCOUNT ERROR:", error);
 
-      return;
+  return;
 
-    }
+}
+
+if(!data){
+
+  console.log("NO CREATOR FOUND");
+
+  return;
+
+}
 
 
 
@@ -85,31 +93,20 @@ export default function AccountLinking() {
 
   useEffect(()=>{
 
-
-    const saved = getData("linkedAccount");
-
-
-    if(saved){
+  const saved = getData("linkedAccount");
 
 
-      setDiscord(saved.discord);
+  if(saved){
 
-      setUsername(saved.username);
+    setDiscord(saved.discord);
+    setUsername(saved.username);
+    setPlatform(saved.platform);
 
-      setPlatform(saved.platform);
+    checkAccount();
 
+  }
 
-      setTimeout(()=>{
-
-        checkAccount();
-
-      },500);
-
-
-    }
-
-
-  },[]);
+},[]);
 
 
 
@@ -292,7 +289,7 @@ className="mt-8 w-full bg-white text-black rounded-xl py-3"
 
 
 
-{creator?.verification_code ? (
+{creator && creator.verification_code ? (
 
 <>
 
