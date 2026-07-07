@@ -1,81 +1,117 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getData, saveData } from "@/lib/storage";
 import { supabase } from "@/lib/supabase";
 
 
 export default function PortalPage() {
 
-  const [account, setAccount] = useState<any>(null);
+
+  const [creator, setCreator] = useState<any>(null);
+
   const [submissions, setSubmissions] = useState<any[]>([]);
 
-
-
-  useEffect(() => {
-
-    async function loadAccount(){
-
-      const savedAccount = getData("linkedAccount");
-
-
-      if(!savedAccount){
-        return;
-      }
-
-
-      // Refresh verification status from database
-      const { data } = await supabase
-        .from("creators")
-        .select("*")
-        .eq("discord_username", savedAccount.discord)
-        .single();
+  const [loading, setLoading] = useState(true);
 
 
 
-      if(data){
-
-        const updatedAccount = {
-
-          platform: data.platform,
-
-          username: data.username,
-
-          discord: data.discord_username,
-
-          status: data.verification_code 
-            ? "Verified" 
-            : "Pending",
-
-          verificationCode: data.verification_code
-
-        };
 
 
-        saveData(
-          "linkedAccount",
-          updatedAccount
-        );
+  async function loadCreator(){
 
 
-        setAccount(updatedAccount);
+    const saved = localStorage.getItem("linkedAccount");
 
 
-        loadSubmissions(
-          updatedAccount.discord
-        );
+    if(!saved){
 
+      setLoading(false);
 
-      }
-
+      return;
 
     }
 
 
-    loadAccount();
+
+    const account = JSON.parse(saved);
 
 
-  }, []);
+
+    if(!account.discord){
+
+      setLoading(false);
+
+      return;
+
+    }
+
+
+
+
+
+    const { data, error } = await supabase
+
+      .from("creators")
+
+      .select("*")
+
+      .eq("discord_username", account.discord)
+
+      .single();
+
+
+
+
+
+    if(error){
+
+      console.log(error);
+
+      setLoading(false);
+
+      return;
+
+    }
+
+
+
+
+
+    setCreator(data);
+
+
+    localStorage.setItem(
+
+      "linkedAccount",
+
+      JSON.stringify({
+
+        platform:data.platform,
+
+        username:data.username,
+
+        discord:data.discord_username,
+
+        status:data.verification_code ? "Verified" : "Pending",
+
+        verificationCode:data.verification_code
+
+      })
+
+    );
+
+
+
+    loadSubmissions(data.discord_username);
+
+
+
+    setLoading(false);
+
+
+  }
+
+
 
 
 
@@ -96,6 +132,7 @@ export default function PortalPage() {
 
 
 
+
     if(error){
 
       console.log(error);
@@ -105,9 +142,87 @@ export default function PortalPage() {
     }
 
 
+
     setSubmissions(data || []);
 
+
   }
+
+
+
+
+
+
+
+
+  useEffect(()=>{
+
+    loadCreator();
+
+  },[]);
+
+
+
+
+
+
+
+
+
+  if(loading){
+
+    return (
+
+      <main className="min-h-screen bg-black text-white p-10">
+
+        Loading...
+
+      </main>
+
+    );
+
+  }
+
+
+
+
+
+
+
+  if(!creator){
+
+    return (
+
+      <main className="min-h-screen bg-black text-white p-10">
+
+
+        <div className="max-w-xl mx-auto">
+
+
+          <h1 className="text-4xl font-bold">
+
+            Creator Portal
+
+          </h1>
+
+
+          <p className="mt-5 text-gray-400">
+
+            Please link your account first.
+
+          </p>
+
+
+        </div>
+
+
+      </main>
+
+    );
+
+  }
+
+
 
 
 
@@ -123,163 +238,186 @@ export default function PortalPage() {
       <div className="max-w-3xl mx-auto">
 
 
+
         <h1 className="text-4xl font-bold">
+
           Creator Portal
+
         </h1>
 
 
+
         <p className="mt-3 text-gray-400">
+
           Manage your account and submissions.
+
         </p>
 
 
 
 
 
-        {!account ? (
-
-          <div className="mt-8 rounded-xl bg-white/5 p-6">
-
-            Please link your account first.
-
-          </div>
-
-
-        ) : (
-
-          <>
-
-
-          <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6">
-
-
-            <h2 className="text-2xl font-semibold">
-              Linked Account
-            </h2>
 
 
 
-            <p className="mt-5">
-              Platform:
+        <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6">
 
-              <span className="ml-2 text-gray-300">
-                {account.platform}
-              </span>
+
+
+          <h2 className="text-2xl font-semibold">
+
+            Linked Account
+
+          </h2>
+
+
+
+
+          <p className="mt-5">
+
+            Platform:
+
+            <span className="ml-2 text-gray-300">
+
+              {creator.platform}
+
+            </span>
+
+          </p>
+
+
+
+
+
+          <p className="mt-2">
+
+            Username:
+
+            <span className="ml-2 text-gray-300">
+
+              {creator.username}
+
+            </span>
+
+          </p>
+
+
+
+
+
+          <p className="mt-2">
+
+            Discord:
+
+            <span className="ml-2 text-gray-300">
+
+              {creator.discord_username}
+
+            </span>
+
+          </p>
+
+
+
+
+
+
+
+          <div className="mt-6 rounded-xl border border-white/10 bg-black p-4">
+
+
+            <p className="font-semibold">
+
+              Verification Status
 
             </p>
 
 
 
-            <p className="mt-2">
-              Account:
+            {creator.verification_code ? (
 
-              <span className="ml-2 text-gray-300">
-                {account.username}
-              </span>
-
-            </p>
+              <>
 
 
+                <p className="mt-2 text-green-400">
 
-            <p className="mt-2">
-              Discord:
+                  🟢 Account Verified
 
-              <span className="ml-2 text-gray-300">
-                {account.discord}
-              </span>
-
-            </p>
+                </p>
 
 
 
-
-
-            <div className="mt-8 rounded-xl border border-white/10 bg-black p-4">
-
-
-              <p className="font-semibold">
-                Verification Status
-              </p>
-
-
-              <p className="mt-2">
-
-                {account.status === "Verified"
-
-                ? "🟢 Verified"
-
-                : "🟡 Waiting for verification"
-
-                }
-
-              </p>
-
-
-
-
-              {account.verificationCode && (
-
-                <>
-
-                <p className="mt-4 text-gray-300">
+                <p className="mt-3 text-gray-300">
 
                   Verification Code:
 
-                  <span className="ml-2 text-white font-bold">
+                  <span className="ml-2 font-bold text-white">
 
-                    {account.verificationCode}
+                    {creator.verification_code}
 
                   </span>
 
                 </p>
 
 
-                <p className="mt-4 text-sm text-gray-400">
-
-                  Verification complete. You can now submit clips and access creator features.
-
-                </p>
-
-                </>
-
-              )}
+              </>
 
 
+            ) : (
 
-            </div>
 
+              <p className="mt-2 text-yellow-400">
+
+                🟡 Waiting for verification
+
+              </p>
+
+
+            )}
 
 
           </div>
 
 
 
-
-
-
-
-          <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6">
-
-
-            <h2 className="text-2xl font-semibold">
-              My Clip Submissions
-            </h2>
+        </div>
 
 
 
 
 
-            {submissions.length === 0 ? (
-
-              <p className="mt-4 text-gray-400">
-                No submissions yet.
-              </p>
 
 
-            ) : (
 
 
-              <div className="mt-5 space-y-4">
+        <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6">
+
+
+          <h2 className="text-2xl font-semibold">
+
+            My Clip Submissions
+
+          </h2>
+
+
+
+
+
+          {submissions.length === 0 ? (
+
+
+            <p className="mt-4 text-gray-400">
+
+              No submissions yet.
+
+            </p>
+
+
+          ) : (
+
+
+
+            <div className="mt-5 space-y-4">
 
 
               {submissions.map((submission)=>(
@@ -294,28 +432,40 @@ export default function PortalPage() {
                 >
 
 
+
                   <p>
+
                     <strong>Campaign:</strong>{" "}
+
                     {submission.campaign}
+
                   </p>
 
 
 
 
+
                   <p className="mt-2">
+
 
                     <strong>Clip:</strong>{" "}
 
+
+
                     <a
+
                       href={submission.clip_url}
+
                       target="_blank"
-                      rel="noopener noreferrer"
+
                       className="underline"
+
                     >
 
-                      {submission.clip_url}
+                      View Clip
 
                     </a>
+
 
                   </p>
 
@@ -324,10 +474,12 @@ export default function PortalPage() {
 
 
                   <p className="mt-2">
+
 
                     <strong>Status:</strong>{" "}
 
                     {submission.status}
+
 
                   </p>
 
@@ -337,37 +489,17 @@ export default function PortalPage() {
 
                   {submission.status === "Rejected" && (
 
+
                     <p className="mt-2 text-red-400">
 
                       Reason: {submission.rejection_reason}
 
                     </p>
 
-                  )}
-
-
-
-                  {submission.status === "Approved" && (
-
-                    <p className="mt-2 text-green-400">
-
-                      ✅ Your clip has been approved!
-
-                    </p>
 
                   )}
 
 
-
-                  {submission.status === "Pending" && (
-
-                    <p className="mt-2 text-yellow-400">
-
-                      🟡 Your clip is being reviewed.
-
-                    </p>
-
-                  )}
 
 
 
@@ -378,21 +510,17 @@ export default function PortalPage() {
 
 
 
-              </div>
+            </div>
 
 
-            )}
-
-
-
-          </div>
+          )}
 
 
 
-          </>
+        </div>
 
 
-        )}
+
 
 
 
@@ -402,5 +530,6 @@ export default function PortalPage() {
     </main>
 
   );
+
 
 }
