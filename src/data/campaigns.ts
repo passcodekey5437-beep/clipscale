@@ -5,17 +5,7 @@ export const campaigns = [
     reward: "$0.50 / 1K Views",
     minimumViews: "1,250 Views",
     platforms: ["TikTok", "Instagram", "YouTube"],
-    instructions: "Google Doc Link Coming Soon",
-    active: true,
-  },
-
-  {
-    id: "pixelsurf-ai",
-    name: "PixelSurf AI",
-    reward: "$1.00 / 1K Views",
-    minimumViews: "3,000 Views",
-    platforms: ["TikTok", "Instagram", "YouTube"],
-    instructions: "Google Doc Link Coming Soon",
+    instructions: "https://docs.google.com/document/d/1D4CeIHt5ZVy6WJYAbzNQEyKFcHsrfddX9o6FWDhgogk/edit?usp=sharing",
     active: true,
   },
 ];
