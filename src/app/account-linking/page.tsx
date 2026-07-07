@@ -36,9 +36,20 @@ export default function AccountLinking() {
 
     if(data){
 
-      setCreator(data);
+  setCreator(data);
 
-    }
+  localStorage.setItem(
+    "linkedAccount",
+    JSON.stringify({
+      platform: data.platform,
+      username: data.username,
+      discord: data.discord_username,
+      status: data.verification_code ? "Verified" : "Pending",
+      verificationCode: data.verification_code
+    })
+  );
+
+}
 
 
   }
@@ -311,7 +322,7 @@ export default function AccountLinking() {
 
                   <p className="mt-3 text-sm text-gray-300">
 
-                    Your account is being reviewed. Usually takes 1 hour or less for a code back. May take longer in some cases. Come back here to check.
+                    Your account is being reviewed. Usually takes 1 hour or less for a code back. May take longer in some cases. Come back here to check. MAKE SURE TO TYPE IN ALL YOUR INFORMATION AGAIN IN ORDER TO GAIN ACCESS.
 
                   </p>
 
