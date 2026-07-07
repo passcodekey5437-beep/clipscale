@@ -303,7 +303,7 @@ className="mt-8 w-full bg-white text-black rounded-xl py-3"
 
 
 <p className="mt-3">
-Your verification code:
+Your verification code above MUST be placed in the BIO of your social media PAGE:
 </p>
 
 
@@ -311,7 +311,39 @@ Your verification code:
 {creator.verification_code}
 </p>
 
+<button
 
+  onClick={() => {
+
+    localStorage.setItem(
+      "linkedAccount",
+      JSON.stringify({
+
+        platform: creator.platform,
+
+        username: creator.username,
+
+        discord: creator.discord_username,
+
+        status: "Verified",
+
+        verificationCode: creator.verification_code
+
+      })
+    );
+
+
+    window.location.href = "/";
+
+  }}
+
+  className="mt-6 w-full rounded-xl bg-white py-3 text-black"
+
+>
+
+  Unlock My Submissions & Submit Clip
+
+</button>
 
 <p className="mt-4 text-gray-300">
 
